@@ -25,14 +25,16 @@ def go(args):
     artifact_local_path = run.use_artifact(args.input_artifact).file()
     
     df = pd.read_csv(artifact_local_path)
-
-    #min_price = 10
-    #max_price = 350
     
     logger.info("Cleaning data...")
     idx = df['price'].between(args.min_price, args.max_price)
     df = df[idx].copy()
     df['last_review'] = pd.to_datetime(df['last_review'])
+    
+    # Added in v1.0.1
+    # Accounts for dropping rows not in the proper geolocation
+    idx = df['longitude'].between(-74.25, -73.50) & df['latitude'].between(40.5, 41.2)
+    df = df[idx].copy()
 
     logger.info(f"Saving clean data to .csv (clean_sample.csv)")
     df.to_csv("clean_sample.csv", index=False)
